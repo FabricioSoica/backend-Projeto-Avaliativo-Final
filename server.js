@@ -55,6 +55,10 @@ const enderecoSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  favorito: {
+    type: Number,
+    default: 0
+  },
   dataCriacao: {
     type: Date,
     default: Date.now
@@ -126,8 +130,8 @@ app.delete('/api/items/:id', async (req, res) => {
 
 app.post('/api/enderecos', async (req, res) => {
   try {
-    const { cep, rua, bairro, numero, estado } = req.body;
-    const novoEndereco = new Endereco({ cep, rua, bairro, numero, estado });
+    const { cep, rua, bairro, numero, estado, favorito } = req.body;
+    const novoEndereco = new Endereco({ cep, rua, bairro, numero, estado, favorito: favorito || 0 });
     const enderecoSalvo = await novoEndereco.save();
     res.status(201).json(enderecoSalvo);
   } catch (error) {
@@ -158,10 +162,10 @@ app.get('/api/enderecos/:id', async (req, res) => {
 
 app.put('/api/enderecos/:id', async (req, res) => {
   try {
-    const { cep, rua, bairro, numero, estado } = req.body;
+    const { cep, rua, bairro, numero, estado, favorito } = req.body;
     const enderecoAtualizado = await Endereco.findByIdAndUpdate(
       req.params.id,
-      { cep, rua, bairro, numero, estado },
+      { cep, rua, bairro, numero, estado, favorito: favorito !== undefined ? favorito : 0 },
       { new: true, runValidators: true }
     );
     if (!enderecoAtualizado) {
