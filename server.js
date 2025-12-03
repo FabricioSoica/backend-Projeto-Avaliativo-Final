@@ -34,6 +34,35 @@ const itemSchema = new mongoose.Schema({
 
 const Item = mongoose.model('Item', itemSchema);
 
+const enderecoSchema = new mongoose.Schema({
+  cep: {
+    type: String,
+    required: true
+  },
+  rua: {
+    type: String,
+    required: true
+  },
+  bairro: {
+    type: String,
+    required: true
+  },
+  numero: {
+    type: String,
+    required: true
+  },
+  estado: {
+    type: String,
+    default: ''
+  },
+  dataCriacao: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Endereco = mongoose.model('Endereco', enderecoSchema);
+
 app.post('/api/items', async (req, res) => {
   try {
     const { nome, descricao } = req.body;
@@ -90,6 +119,67 @@ app.delete('/api/items/:id', async (req, res) => {
       return res.status(404).json({ error: 'Item não encontrado' });
     }
     res.json({ message: 'Item deletado com sucesso', item: itemDeletado });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/enderecos', async (req, res) => {
+  try {
+    const { cep, rua, bairro, numero, estado } = req.body;
+    const novoEndereco = new Endereco({ cep, rua, bairro, numero, estado });
+    const enderecoSalvo = await novoEndereco.save();
+    res.status(201).json(enderecoSalvo);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get('/api/enderecos', async (req, res) => {
+  try {
+    const enderecos = await Endereco.find().sort({ dataCriacao: -1 });
+    res.json(enderecos);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/enderecos/:id', async (req, res) => {
+  try {
+    const endereco = await Endereco.findById(req.params.id);
+    if (!endereco) {
+      return res.status(404).json({ error: 'Endereço não encontrado' });
+    }
+    res.json(endereco);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/enderecos/:id', async (req, res) => {
+  try {
+    const { cep, rua, bairro, numero, estado } = req.body;
+    const enderecoAtualizado = await Endereco.findByIdAndUpdate(
+      req.params.id,
+      { cep, rua, bairro, numero, estado },
+      { new: true, runValidators: true }
+    );
+    if (!enderecoAtualizado) {
+      return res.status(404).json({ error: 'Endereço não encontrado' });
+    }
+    res.json(enderecoAtualizado);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.delete('/api/enderecos/:id', async (req, res) => {
+  try {
+    const enderecoDeletado = await Endereco.findByIdAndDelete(req.params.id);
+    if (!enderecoDeletado) {
+      return res.status(404).json({ error: 'Endereço não encontrado' });
+    }
+    res.json({ message: 'Endereço deletado com sucesso', endereco: enderecoDeletado });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
